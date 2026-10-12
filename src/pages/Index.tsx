@@ -1,17 +1,118 @@
-// Update this page (the content is just a fallback if you fail to update the page)
-
-import { MadeWithDyad } from "@/components/made-with-dyad";
+import React, { useState } from 'react';
+import { useWorkSheet } from '@/context/WorkSheetContext';
+import { WorkCard } from '@/components/WorkCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Search, Calendar, Filter, FileText } from 'lucide-react';
 
 const Index = () => {
+  const { worksheets, deleteWorkSheet } = useWorkSheet();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('all');
+
+  const filteredWorksheets = worksheets.filter((ws) => {
+    const matchesSearch = ws.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ws.address.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDate = dateFilter === 'all' || (() => {
+      const today = new Date();
+      const worksheetDate = new Date(ws.date);
+      switch (dateFilter) {
+        case 'today':
+          return worksheetDate.toDateString() === today.toDateString();
+        case 'week':
+          const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return worksheetDate >= weekAgo;
+        case 'month':
+          const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+          return worksheetDate >= monthAgo;
+        default:
+          return true;
+      }
+    })();
+
+    return matchesSearch && matchesDate;
+  });
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">
-          Start building your amazing project here!
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+              <FileText className="w-6 h-6 mr-2 text-primary" />
+              Partes de Trabajo
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {worksheets.length} partes de trabajo • {filteredWorksheets.length} filtrados
+            </p>
+          </div>
+
+          <Button onClick={() => window.location.href = '/works/new'} className="btn-primary">
+            <Plus className="w-4 h-4 mr-1" />
+            Nuevo Parte
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por cliente o dirección..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Fecha" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las fechas</SelectItem>
+                  <SelectItem value="today">Hoy</SelectItem>
+                  <SelectItem value="week">Esta semana</SelectItem>
+                  <SelectItem value="month">Este mes</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Worksheets List */}
+        {filteredWorksheets.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+            <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No hay partes de trabajo</h3>
+            <p className="text-gray-500 mb-4">
+              {worksheets.length === 0
+                ? "Aún no has creado ningún parte de trabajo"
+                : "No se encontraron partes de trabajo con los filtros seleccionados"
+              }
+            </p>
+            {worksheets.length === 0 && (
+              <Button onClick={() => window.location.href = '/works/new'} className="btn-primary">
+                <Plus className="w-4 h-4 mr-1" />
+                Crear Primer Parte
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredWorksheets.map((ws) => (
+              <WorkCard key={ws.id} workSheet={ws} onDelete={deleteWorkSheet} />
+            ))}
+          </div>
+        )}
       </div>
-      <MadeWithDyad />
     </div>
   );
 };
