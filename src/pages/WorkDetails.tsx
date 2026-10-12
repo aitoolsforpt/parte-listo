@@ -74,6 +74,96 @@ const WorkDetails: React.FC = () => {
     return new Date(dateString).toLocaleDateString('es-ES', options);
   };
 
+  // Photo handlers
+  const handleAddPhoto = (photo: Partial<Photo>) => {
+    const newPhoto: Photo = {
+      id: `photo-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      src: photo.src || '',
+      caption: photo.caption || '',
+      before: photo.before || false,
+      timestamp: new Date().toISOString()
+    };
+    updateWorkSheet(workSheet.id, {
+      photos: [...workSheet.photos, newPhoto]
+    });
+  };
+
+  const handleRemovePhoto = (id: string) => {
+    updateWorkSheet(workSheet.id, {
+      photos: workSheet.photos.filter(p => p.id !== id)
+    });
+  };
+
+  const handleUpdateCaption = (id: string, caption: string) => {
+    updateWorkSheet(workSheet.id, {
+      photos: workSheet.photos.map(p =>
+        p.id === id ? { ...p, caption } : p
+      )
+    });
+  };
+
+  // Task handlers
+  const handleAddTask = (text: string) => {
+    const newTask: Task = {
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text,
+      completed: false
+    };
+    updateWorkSheet(workSheet.id, {
+      tasks: [...workSheet.tasks, newTask]
+    });
+  };
+
+  const handleRemoveTask = (id: string) => {
+    updateWorkSheet(workSheet.id, {
+      tasks: workSheet.tasks.filter(t => t.id !== id)
+    });
+  };
+
+  const handleToggleTask = (id: string) => {
+    updateWorkSheet(workSheet.id, {
+      tasks: workSheet.tasks.map(t =>
+        t.id === id ? { ...t, completed: !t.completed } : t
+      )
+    });
+  };
+
+  const handleUpdateTask = (id: string, text: string) => {
+    updateWorkSheet(workSheet.id, {
+      tasks: workSheet.tasks.map(t =>
+        t.id === id ? { ...t, text } : t
+      )
+    });
+  };
+
+  // Incident handlers
+  const handleAddIncident = (text: string, type: Incident['type'], severity: Incident['severity']) => {
+    const newIncident: Incident = {
+      id: `incident-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text,
+      type,
+      severity,
+      timestamp: new Date().toISOString()
+    };
+    updateWorkSheet(workSheet.id, {
+      incidents: [...workSheet.incidents, newIncident]
+    });
+  };
+
+  const handleRemoveIncident = (id: string) => {
+    updateWorkSheet(workSheet.id, {
+      incidents: workSheet.incidents.filter(i => i.id !== id)
+    });
+  };
+
+  const handleUpdateIncident = (id: string, updates: Partial<Incident>) => {
+    updateWorkSheet(workSheet.id, {
+      incidents: workSheet.incidents.map(i =>
+        i.id === id ? { ...i, ...updates } : i
+      )
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -194,24 +284,24 @@ const WorkDetails: React.FC = () => {
         <div className="space-y-6">
           <PhotoGallery
             photos={workSheet.photos}
-            onAddPhoto={() => {}}
-            onRemovePhoto={() => {}}
-            onUpdateCaption={() => {}}
+            onAddPhoto={handleAddPhoto}
+            onRemovePhoto={handleRemovePhoto}
+            onUpdateCaption={handleUpdateCaption}
           />
 
           <TaskChecklist
             tasks={workSheet.tasks}
-            onAddTask={() => {}}
-            onRemoveTask={() => {}}
-            onToggleTask={() => {}}
-            onUpdateTask={() => {}}
+            onAddTask={handleAddTask}
+            onRemoveTask={handleRemoveTask}
+            onToggleTask={handleToggleTask}
+            onUpdateTask={handleUpdateTask}
           />
 
           <IncidentList
             incidents={workSheet.incidents}
-            onAddIncident={() => {}}
-            onRemoveIncident={() => {}}
-            onUpdateIncident={() => {}}
+            onAddIncident={handleAddIncident}
+            onRemoveIncident={handleRemoveIncident}
+            onUpdateIncident={handleUpdateIncident}
           />
         </div>
 
