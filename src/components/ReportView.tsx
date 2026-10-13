@@ -144,7 +144,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ workSheet, onClose }) =>
 
             {/* Tasks */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Tareas Realizadas</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Tareas</h3>
               {workSheet.tasks.length === 0 ? (
                 <p className="text-gray-500">No hay tareas registradas</p>
               ) : (
@@ -156,8 +156,8 @@ export const ReportView: React.FC<ReportViewProps> = ({ workSheet, onClose }) =>
                       }`}>
                         {task.completed && <span className="text-xs">✓</span>}
                       </span>
-                      <span className={task.completed ? 'line-through text-gray-500' : 'text-gray-800'}>
-                        {task.text}
+                      <span className={task.completed ? 'text-gray-800' : 'text-gray-500'}>
+                        {task.text}{!task.completed && ' (pendiente)'}
                       </span>
                     </li>
                   ))}
