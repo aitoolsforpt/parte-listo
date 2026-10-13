@@ -36,6 +36,7 @@ export interface WorkSheet {
   photos: Photo[];
   incidents: Incident[];
   notes?: string;
+  signature?: string;
   createdAt: string;
   updatedAt: string;
 }

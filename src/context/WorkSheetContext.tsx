@@ -7,6 +7,7 @@ interface WorkSheetContextType {
   getWorkSheet: (id: string) => WorkSheet | undefined;
   updateWorkSheet: (id: string, updates: Partial<WorkSheet>) => void;
   deleteWorkSheet: (id: string) => void;
+  replaceAll: (list: WorkSheet[]) => void;
 }
 
 const WorkSheetContext = createContext<WorkSheetContextType | undefined>(undefined);
@@ -31,7 +32,12 @@ export const WorkSheetProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(worksheets));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(worksheets));
+      } catch (error) {
+        console.error('Error saving worksheets:', error);
+        alert('No hay espacio para guardar. Descarga una copia de seguridad y borra partes antiguos.');
+      }
     }
   }, [worksheets, isLoaded]);
 
@@ -64,9 +70,11 @@ export const WorkSheetProvider: React.FC<{ children: ReactNode }> = ({ children 
     setWorksheets((prev) => prev.filter((w) => w.id !== id));
   };
 
+  const replaceAll = (list: WorkSheet[]) => setWorksheets(list);
+
   return (
     <WorkSheetContext.Provider
-      value={{ worksheets, addWorkSheet, getWorkSheet, updateWorkSheet, deleteWorkSheet }}
+      value={{ worksheets, addWorkSheet, getWorkSheet, updateWorkSheet, deleteWorkSheet, replaceAll }}
     >
       {children}
     </WorkSheetContext.Provider>

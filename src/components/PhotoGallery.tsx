@@ -4,6 +4,7 @@ import { Camera, X, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { compressImage } from '@/lib/image';
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -12,8 +13,7 @@ interface PhotoGalleryProps {
   onUpdateCaption: (id: string, caption: string) => void;
 }
 
-const MAX_SIZE_MB = 5;
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/jpg'];
+const MAX_SIZE_MB = 25;
 
 export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   photos,
@@ -21,29 +21,26 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   onRemovePhoto,
   onUpdateCaption
 }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      alert('Por favor, selecciona un archivo de imagen (JPEG o PNG)');
-      return;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const files = Array.from(input.files || []);
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        alert('Selecciona una imagen (JPEG o PNG)');
+        continue;
+      }
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        alert('La imagen es demasiado grande. Máximo ' + MAX_SIZE_MB + ' MB');
+        continue;
+      }
+      try {
+        const src = await compressImage(file);
+        onAddPhoto({ src, before: false, caption: '' });
+      } catch {
+        alert('No se pudo leer esa imagen. Prueba con otra (JPEG o PNG).');
+      }
     }
-
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert('La imagen es demasiado grande. Máximo ' + MAX_SIZE_MB + ' MB');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      onAddPhoto({
-        src: reader.result as string,
-        before: false,
-        caption: ''
-      });
-    };
-    reader.readAsDataURL(file);
+    input.value = '';
   };
 
   return (
@@ -59,7 +56,7 @@ export const PhotoGallery: React.FC<PhotoGalleryProps> = ({
             Añadir foto
             <input
               type="file"
-              accept="image/jpeg,image/png,image/jpg"
+              accept="image/*"
               onChange={handleFileChange}
               className="hidden"
             />

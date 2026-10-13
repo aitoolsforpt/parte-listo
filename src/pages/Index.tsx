@@ -5,9 +5,42 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Calendar, Filter, FileText } from 'lucide-react';
+import { loadCompany, saveCompany } from '@/lib/company';
 
 const Index = () => {
-  const { worksheets, deleteWorkSheet } = useWorkSheet();
+  const { worksheets, deleteWorkSheet, replaceAll } = useWorkSheet();
+  const [company, setCompany] = useState(loadCompany);
+
+  const updateCompany = (field: 'name' | 'phone', value: string) => {
+    const next = { ...company, [field]: value };
+    setCompany(next);
+    saveCompany(next);
+  };
+
+  const backup = () => {
+    const blob = new Blob([JSON.stringify(worksheets)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `partes-copia-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const restore = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const list = JSON.parse(await file.text());
+      if (!Array.isArray(list) || list.some((w) => !w || !w.id || !w.client)) throw new Error('formato');
+      if (confirm(`Esto reemplaza tus ${worksheets.length} partes actuales por ${list.length} de la copia. ¿Continuar?`)) {
+        replaceAll(list);
+      }
+    } catch {
+      alert('El archivo no es una copia válida de Parte Listo.');
+    }
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
 
@@ -112,6 +145,41 @@ const Index = () => {
             ))}
           </div>
         )}
+
+        {/* Ajustes */}
+        <details className="mt-8 bg-white rounded-lg shadow-sm p-4">
+          <summary className="cursor-pointer text-sm font-medium text-gray-700">
+            Mi empresa y copia de seguridad
+          </summary>
+          <div className="mt-4 space-y-4">
+            <p className="text-xs text-gray-500">
+              Tus partes se guardan solo en este navegador. Descarga una copia de vez en cuando.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                placeholder="Nombre de tu empresa (sale en el informe)"
+                value={company.name}
+                onChange={(e) => updateCompany('name', e.target.value)}
+              />
+              <Input
+                placeholder="Tu teléfono (sale en el informe)"
+                value={company.phone}
+                onChange={(e) => updateCompany('phone', e.target.value)}
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" onClick={backup} disabled={worksheets.length === 0}>
+                Descargar copia
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <label className="cursor-pointer">
+                  Restaurar copia
+                  <input type="file" accept="application/json" onChange={restore} className="hidden" />
+                </label>
+              </Button>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   );

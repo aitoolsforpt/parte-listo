@@ -91,7 +91,7 @@ const Reports: React.FC = () => {
       if (navigator.share) {
         const file = new File([pdfBlob], `informe-resumen-${new Date().toISOString().split('T')[0]}.pdf`, { type: 'application/pdf' });
         await navigator.share({
-          title: 'Resumen de Informes de Limpieza',
+          title: 'Resumen de partes de trabajo',
           text: 'Resumen de todos los partes de trabajo',
           files: [file]
         });
@@ -180,7 +180,7 @@ const Reports: React.FC = () => {
         </div>
 
         {/* Reports Container (for export) */}
-        <div id="reports-container" className="hidden">
+        <div id="reports-container" className="fixed top-0 -left-[10000px] w-[800px]" aria-hidden="true">
           <div className="bg-white p-8">
             <h1 className="text-3xl font-bold text-center mb-4">Resumen de Informes</h1>
             <p className="text-center text-gray-600 mb-8">
